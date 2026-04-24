@@ -2,7 +2,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
-
 from app.models.comment import Comment
 from app.schemas.comment import CommentCreate
 
@@ -21,7 +20,6 @@ async def create_comment(db: AsyncSession, comment: CommentCreate, author_id: in
     await db.commit()
     await db.refresh(db_comment)
     
-    # Eagerly load the author relationship for the response
     stmt = select(Comment).options(selectinload(Comment.author)).where(Comment.id == db_comment.id)
     result = await db.execute(stmt)
     return result.scalars().first()

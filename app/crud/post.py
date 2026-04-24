@@ -3,11 +3,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from slugify import slugify
-
 from app.models.post import Post, Category
 from app.schemas.post import PostCreate, PostUpdate, CategoryCreate
 
-# Category CRUD
+
 async def get_category_by_name(db: AsyncSession, name: str) -> Optional[Category]:
     stmt = select(Category).where(Category.name == name)
     result = await db.execute(stmt)
@@ -28,7 +27,6 @@ async def get_categories(db: AsyncSession) -> List[Category]:
     result = await db.execute(stmt)
     return result.scalars().all()
 
-# Post CRUD
 async def get_post_by_slug(db: AsyncSession, slug: str) -> Optional[Post]:
     stmt = select(Post).options(selectinload(Post.author), selectinload(Post.category)).where(Post.slug == slug)
     result = await db.execute(stmt)
@@ -41,8 +39,6 @@ async def get_posts(db: AsyncSession, skip: int = 0, limit: int = 100) -> List[P
 
 async def create_post(db: AsyncSession, post: PostCreate, author_id: int) -> Post:
     base_slug = slugify(post.title)
-    
-    # Simple logic to handle duplicate slugs (can be improved)
     stmt = select(Post).where(Post.slug == base_slug)
     result = await db.execute(stmt)
     existing = result.scalars().first()
@@ -60,7 +56,6 @@ async def create_post(db: AsyncSession, post: PostCreate, author_id: int) -> Pos
     await db.commit()
     await db.refresh(db_post)
     
-    # Eagerly load relationships so they can be returned
     return await get_post_by_slug(db, slug=db_post.slug)
 
 async def update_post(db: AsyncSession, db_post: Post, post_update: PostUpdate) -> Post:
